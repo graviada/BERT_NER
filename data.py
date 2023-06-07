@@ -3,7 +3,7 @@ from typing import Dict, Type
 
 from abc import ABC
 from datasets import DatasetDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from bert_model_ner import BERTModelNER
 
 # Директория данных
@@ -16,6 +16,18 @@ DATA_NER = {
 @dataclass
 class DataForNER(ABC):
     datadict: DatasetDict
+    LABEL2ID: field(init=False, default={
+        'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3,
+        'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6, 'B-ANIM': 7,
+        'I-ANIM': 8, 'B-BIO': 9, 'I-BIO': 10, 'B-CEL': 11,
+        'I-CEL': 12, 'B-DIS': 13, 'I-DIS': 14, 'B-EVE': 15,
+        'I-EVE': 16, 'B-FOOD': 17, 'I-FOOD': 18, 'B-INST': 19,
+        'I-INST': 20, 'B-MEDIA': 21, 'I-MEDIA': 22, 'B-PLANT': 23,
+        'I-PLANT': 24, 'B-MYTH': 25, 'I-MYTH': 26, 'B-TIME': 27,
+        'I-TIME': 28, 'B-VEHI': 29, 'I-VEHI': 30, 'B-SUPER': 31,
+        'I-SUPER': 32, 'B-PHY': 33, 'I-PHY': 34}
+    )
+    LABEL_LIST: field(init=False, default_factory=lambda: list(DataForNER.LABEL2ID.keys()))
 
     # Обработка данных
     @staticmethod
@@ -44,21 +56,18 @@ class DataForNER(ABC):
 
         tokenized_data['labels'] = labels
         return tokenized_data
-
+    
     # Вычисление метрик
     @staticmethod
-    def compute_metrics(p):
+    def compute_metrics(cls, p):
         predictions, labels = p
         predictions = np.argmax(predictions, axis=2)
 
         true_predictions = [
-            [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
+            [cls.LABEL_LIST[p] for (p, l) in zip(prediction, label) if l != -100]
             for prediction, label in zip(predictions, labels)
         ]
-        true_labels = [
-            [label_list[l] for (p, l) in zip(prediction, label) if l != -100]
-            for prediction, label in zip(predictions, labels)
-        ]
+        true_labels = [[cls.LABEL_LIST[l] for l in label if l != -100] for label in labels]
 
         results = BERTModelNER.METRIC.compute(predictions=true_predictions, references=true_labels)
         return {
@@ -71,17 +80,7 @@ class DataForNER(ABC):
 
 @dataclass
 class TnerMultinerd(DataForNER):
-    LABEL2ID = {
-        'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3,
-        'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6, 'B-ANIM': 7,
-        'I-ANIM': 8, 'B-BIO': 9, 'I-BIO': 10, 'B-CEL': 11,
-        'I-CEL': 12, 'B-DIS': 13, 'I-DIS': 14, 'B-EVE': 15,
-        'I-EVE': 16, 'B-FOOD': 17, 'I-FOOD': 18, 'B-INST': 19,
-        'I-INST': 20, 'B-MEDIA': 21, 'I-MEDIA': 22, 'B-PLANT': 23,
-        'I-PLANT': 24, 'B-MYTH': 25, 'I-MYTH': 26, 'B-TIME': 27,
-        'I-TIME': 28, 'B-VEHI': 29, 'I-VEHI': 30, 'B-SUPER': 31,
-        'I-SUPER': 32, 'B-PHY': 33, 'I-PHY': 34
-    }
+    LABEL2ID = DataForNER.LABEL2ID
 
 
 @dataclass

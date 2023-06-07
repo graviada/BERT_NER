@@ -5,7 +5,7 @@ from functools import partial
 from argparse import ArgumentParser
 
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
 from transformers import DataCollatorForTokenClassification, Trainer
 
 from bert_model_ner import MODEL_TO_HUB_NAME, BERTModelNER
@@ -29,7 +29,7 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     # Выгрузка данных и словарей маппинга для меток и айдишников
     if data_name == 'runne':
         datadict = load_dataset(DATA_NER[data_name])
-        datadict = datadict['dev'].rename('valid')
+        datadict = DatasetDict({'train': datadict['train'], 'valid': datadict['dev'], 'test': datadict['test']})
         label2id = Runne.LABEL2ID
     else:
         datadict = load_dataset(DATA_NER[data_name][0], DATA_NER[data_name][1])
