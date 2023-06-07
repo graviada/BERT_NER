@@ -15,11 +15,6 @@ MODEL_TO_HUB_NAME = {
 SEED = 42
 set_seed(SEED)
 
-'''
-ГДЕ-ТО ЕЩЕ НУЖНО ДОБАВИТЬ DROPOUT
-'''
-
-
 class BERTModelNER:
     OPTIMIZER_NAME = 'adamw_torch'
     METRIC = evaluate.load('seqeval')
@@ -41,21 +36,20 @@ class BERTModelNER:
 
     # Инициализация модели
     @staticmethod
-    def model_initialization(model_name: str, id2label: Dict, label2id: Dict, num_labels: int):
+    def model_initialization(model_name: str, id2label: Dict, label2id: Dict, num_labels: int, dropout: float):
         model = BertForTokenClassification.from_pretrained(
             model_name,
             id2label=id2label,
             label2id=label2id,
-            num_labels=num_labels
-            # attention_probs_dropout_prob=DROPOUT,
-            # hidden_dropout_prob=DROPOUT
+            num_labels=num_labels,
+            hidden_dropout_prob=dropout
         )
         return model
 
     # Задание гиперпараметров обучения
     @classmethod
     def set_training_args(cls, result_dir, logging_dir, batch_size, learning_rate,
-                          num_epochs):
+                          num_epochs, weight_decay):
         training_args = TrainingArguments(
             output_dir=result_dir,
             overwrite_output_dir=True,
@@ -68,6 +62,7 @@ class BERTModelNER:
             learning_rate=learning_rate,
             num_train_epochs=num_epochs,
             optim=cls.OPTIMIZER_NAME,
+            weight_decay=weight_decay,
             warmup_ratio=0.1,
             save_strategy='epoch',
             seed=SEED,
@@ -75,7 +70,6 @@ class BERTModelNER:
             dataloader_num_workers=2,
             group_by_length=True,
             save_total_limit=1,
-            load_best_model_at_end=True,
-            metric_for_best_model=cls.METRIC
+            load_best_model_at_end=True
         )
         return training_args

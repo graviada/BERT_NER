@@ -3,33 +3,19 @@ from typing import Dict, Type
 
 from abc import ABC
 from datasets import DatasetDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from bert_model_ner import BERTModelNER
 
 # Директория данных
 DATA_NER = {
     'runne': 'graviada/russian-ner-runne',
-    'multinerd': ['tner/multinerd', 'ru'],
     'wikineural': ['tner/wikineural', 'ru']
-}
-
-DEFAULT_DICT = {
-    'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3,
-    'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6, 'B-ANIM': 7,
-    'I-ANIM': 8, 'B-BIO': 9, 'I-BIO': 10, 'B-CEL': 11,
-    'I-CEL': 12, 'B-DIS': 13, 'I-DIS': 14, 'B-EVE': 15,
-    'I-EVE': 16, 'B-FOOD': 17, 'I-FOOD': 18, 'B-INST': 19,
-    'I-INST': 20, 'B-MEDIA': 21, 'I-MEDIA': 22, 'B-PLANT': 23,
-    'I-PLANT': 24, 'B-MYTH': 25, 'I-MYTH': 26, 'B-TIME': 27,
-    'I-TIME': 28, 'B-VEHI': 29, 'I-VEHI': 30, 'B-SUPER': 31,
-    'I-SUPER': 32, 'B-PHY': 33, 'I-PHY': 34
 }
 
 @dataclass
 class DataForNER(ABC):
     datadict: DatasetDict
-    LABEL2ID: field(init=False, default=DEFAULT_DICT)
-    LABEL_LIST: field(init=False, default_factory=lambda: list(DataForNER.LABEL2ID.keys()))
+    label_list = []
 
     # Обработка данных
     @staticmethod
@@ -58,18 +44,21 @@ class DataForNER(ABC):
 
         tokenized_data['labels'] = labels
         return tokenized_data
-    
+
     # Вычисление метрик
-    @staticmethod
+    @classmethod
     def compute_metrics(cls, p):
         predictions, labels = p
         predictions = np.argmax(predictions, axis=2)
 
         true_predictions = [
-            [cls.LABEL_LIST[p] for (p, l) in zip(prediction, label) if l != -100]
+            [cls.label_list[p] for (p, l) in zip(prediction, label) if l != -100]
             for prediction, label in zip(predictions, labels)
         ]
-        true_labels = [[cls.LABEL_LIST[l] for l in label if l != -100] for label in labels]
+        true_labels = [
+            [cls.label_list[l] for (p, l) in zip(prediction, label) if l != -100]
+            for prediction, label in zip(predictions, labels)
+        ]
 
         results = BERTModelNER.METRIC.compute(predictions=true_predictions, references=true_labels)
         return {
@@ -78,11 +67,6 @@ class DataForNER(ABC):
             "f1": results["overall_f1"],
             "accuracy": results["overall_accuracy"],
         }
-
-
-@dataclass
-class TnerMultinerd(DataForNER):
-    LABEL2ID = DEFAULT_DICT
 
 
 @dataclass
@@ -97,6 +81,7 @@ class TnerWikiNeural(DataForNER):
         'I-PLANT': 24, 'B-MYTH': 25, 'I-MYTH': 26, 'B-TIME': 27,
         'I-TIME': 28, 'B-VEHI': 29, 'I-VEHI': 30, 'B-MISC': 31, 'I-MISC': 32
     }
+    label_list = list(LABEL2ID.keys())
 
 
 @dataclass
@@ -115,10 +100,10 @@ class Runne(DataForNER):
         'B-RELIGION': 50, 'I-RELIGION': 51, 'B-STATE_OR_PROVINCE': 52, 'I-STATE_OR_PROVINCE': 53,
         'B-TIME': 54, 'I-TIME': 55, 'B-WORK_OF_ART': 56, 'I-WORK_OF_ART': 57
     }
+    label_list = list(LABEL2ID.keys())
 
 # Выбор класса данных
 DATA_TO_CLASS: Dict[str, Type[DataForNER]] = {
     'runne': Runne,
-    'multinerd': TnerMultinerd,
     'wikineural': TnerWikiNeural
 }

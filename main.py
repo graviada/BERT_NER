@@ -1,24 +1,24 @@
 import os
-import copy
 from pathlib import Path
-from functools import partial
 from argparse import ArgumentParser
 
 import torch
+import wandb
 from datasets import load_dataset, DatasetDict
 from transformers import DataCollatorForTokenClassification, Trainer
 
-from bert_model_ner import MODEL_TO_HUB_NAME, BERTModelNER
-from data import Runne, TnerMultinerd, TnerWikiNeural, DATA_NER, DATA_TO_CLASS
-
-'''
-ГДЕ-ТО ЕЩЕ НУЖНО ДОБАВИТЬ DROPOUT, weight_decay
-'''
+from bert_model_ner import MODEL_TO_HUB_NAME, BERTModelNER, SEED
+from data import Runne, TnerWikiNeural, DATA_NER, DATA_TO_CLASS
 
 # Отключение уведомлений от transformers
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
-RESULT_PATH = '/content/result'  # папка для сохранения результатов дообучения
-LOGGING_PATH = '/content/result/logging'
+
+def reduce_datadict_size(datadict: DatasetDict) -> DatasetDict:
+    datadict = DatasetDict({
+        'train': datadict['train'].shuffle(seed=SEED).select(range(int(0.3 * len(datadict['train'])))),
+        'valid': datadict['valid'].shuffle(seed=SEED).select(range(int(0.3 * len(datadict['valid'])))),
+        'test': datadict['test'].shuffle(seed=SEED).select(range(int(0.3 * len(datadict['test']))))})
+    return datadict
 
 
 def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size, 
@@ -33,10 +33,13 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
         label2id = Runne.LABEL2ID
     else:
         datadict = load_dataset(DATA_NER[data_name][0], DATA_NER[data_name][1])
-        if data_name == 'multinerd':
-            label2id = TnerMultinerd.LABEL2ID
-        else:
-            label2id = TnerWikiNeural.LABEL2ID
+        datadict = DatasetDict({
+            'train': datadict['train'], 
+            'valid': datadict['validation'], 
+            'test': datadict['test']
+        })
+        datadict = reduce_datadict_size(datadict)
+        label2id = TnerWikiNeural.LABEL2ID
 
     id2label = {v: k for k, v in label2id.items()}
     config = DATA_TO_CLASS[data_name](datadict)
@@ -58,9 +61,17 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
         model_name=MODEL_TO_HUB_NAME[model_name],
         id2label=id2label,
         label2id=label2id,
-        num_labels=len(label2id)
+        num_labels=len(label2id),
+        dropout=dropout
         ).to(device)
     print(f'Модель {model_name} загружена')
+
+    run = wandb.init(project='BERTmodels_NER', name=str(result_dir))
+    run.config.update({
+        'datadict': data_name, 
+        'model': model_name, 
+        'checkpoint': str(logging_dir)
+    })
 
     # Инициализация трейнера и запуск обучения
     trainer = Trainer(
@@ -70,20 +81,26 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
             logging_dir=logging_dir,
             batch_size=batch_size,
             learning_rate=learning_rate,
-            num_epochs=num_epochs
+            num_epochs=num_epochs,
+            weight_decay=weight_decay
         ),
         train_dataset=tokenized_datadict['train'],
         eval_dataset=tokenized_datadict['valid'],
-        compute_metrics=partial(
-            config.compute_metrics,
-            processed_dataset=tokenized_datadict['valid']
-        ),
+        compute_metrics=config.compute_metrics,
         tokenizer=tokenizer,
         data_collator=data_collator
     )
     
-    trainer.train()
-    pass
+    train_result = trainer.train()
+    print('train', train_result.metrics)
+
+    test_predictions = trainer.predict(test_dataset=tokenized_datadict['test'])
+    print('test', test_predictions.metrics)
+
+    run.summary.update(test_predictions.metrics)
+    wandb.finish()
+    
+    print('Завершение работы')
 
 
 # Для задания параметров обучения из командной строки
