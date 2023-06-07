@@ -13,20 +13,22 @@ DATA_NER = {
     'wikineural': ['tner/wikineural', 'ru']
 }
 
+DEFAULT_DICT = {
+    'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3,
+    'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6, 'B-ANIM': 7,
+    'I-ANIM': 8, 'B-BIO': 9, 'I-BIO': 10, 'B-CEL': 11,
+    'I-CEL': 12, 'B-DIS': 13, 'I-DIS': 14, 'B-EVE': 15,
+    'I-EVE': 16, 'B-FOOD': 17, 'I-FOOD': 18, 'B-INST': 19,
+    'I-INST': 20, 'B-MEDIA': 21, 'I-MEDIA': 22, 'B-PLANT': 23,
+    'I-PLANT': 24, 'B-MYTH': 25, 'I-MYTH': 26, 'B-TIME': 27,
+    'I-TIME': 28, 'B-VEHI': 29, 'I-VEHI': 30, 'B-SUPER': 31,
+    'I-SUPER': 32, 'B-PHY': 33, 'I-PHY': 34
+}
+
 @dataclass
 class DataForNER(ABC):
     datadict: DatasetDict
-    LABEL2ID: field(init=False, default={
-        'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3,
-        'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6, 'B-ANIM': 7,
-        'I-ANIM': 8, 'B-BIO': 9, 'I-BIO': 10, 'B-CEL': 11,
-        'I-CEL': 12, 'B-DIS': 13, 'I-DIS': 14, 'B-EVE': 15,
-        'I-EVE': 16, 'B-FOOD': 17, 'I-FOOD': 18, 'B-INST': 19,
-        'I-INST': 20, 'B-MEDIA': 21, 'I-MEDIA': 22, 'B-PLANT': 23,
-        'I-PLANT': 24, 'B-MYTH': 25, 'I-MYTH': 26, 'B-TIME': 27,
-        'I-TIME': 28, 'B-VEHI': 29, 'I-VEHI': 30, 'B-SUPER': 31,
-        'I-SUPER': 32, 'B-PHY': 33, 'I-PHY': 34}
-    )
+    LABEL2ID: field(init=False, default=DEFAULT_DICT)
     LABEL_LIST: field(init=False, default_factory=lambda: list(DataForNER.LABEL2ID.keys()))
 
     # Обработка данных
@@ -80,7 +82,7 @@ class DataForNER(ABC):
 
 @dataclass
 class TnerMultinerd(DataForNER):
-    LABEL2ID = field(init=False, default_factory=lambda: DataForNER.LABEL2ID)
+    LABEL2ID = DEFAULT_DICT
 
 
 @dataclass
