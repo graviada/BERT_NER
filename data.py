@@ -80,7 +80,7 @@ class DataForNER(ABC):
 
 @dataclass
 class TnerMultinerd(DataForNER):
-    LABEL2ID = DataForNER.LABEL2ID
+    LABEL2ID = field(init=False, default_factory=lambda: DataForNER.LABEL2ID)
 
 
 @dataclass
