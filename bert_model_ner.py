@@ -2,13 +2,13 @@ from typing import Dict
 
 import evaluate
 from transformers.trainer_utils import set_seed
-from transformers import AutoTokenizer, BertTokenizerFast, BertForTokenClassification, \
+from transformers import XLMRobertaTokenizerFast, BertTokenizerFast, BertForTokenClassification, \
     TrainingArguments
 
 # Модели, которые мы проверяем
 MODEL_TO_HUB_NAME = {
     'rubert': 'ai-forever/ruBert-base',
-    'ruroberta': 'ai-forever/ruRoberta-large',
+    'xlm-roberta': 'xlm-roberta-base',
     'labse': 'cointegrated/LaBSE-en-ru'
 }
 
@@ -28,8 +28,8 @@ class BERTModelNER:
     # Получение нужного токенизатора для модели
     @staticmethod
     def get_tokenizer(model_name: str):
-        if model_name == MODEL_TO_HUB_NAME['ruroberta']:
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
+        if model_name == MODEL_TO_HUB_NAME['xlm-roberta']:
+            tokenizer = XLMRobertaTokenizerFast.from_pretrained(model_name)
         else:
             tokenizer = BertTokenizerFast.from_pretrained(model_name)
         return tokenizer

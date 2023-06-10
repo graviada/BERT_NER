@@ -60,7 +60,7 @@ class DataForNER(ABC):
             for prediction, label in zip(predictions, labels)
         ]
 
-        results = BERTModelNER.METRIC.compute(predictions=true_predictions, references=true_labels)
+        results = BERTModelNER.METRIC.compute(predictions=true_predictions, references=true_labels, average='macro')
         return {
             "precision": results["overall_precision"],
             "recall": results["overall_recall"],
@@ -70,7 +70,7 @@ class DataForNER(ABC):
 
 
 @dataclass
-class TnerWikiNeural(DataForNER):
+class TNERWikineural(DataForNER):
     LABEL2ID = {
         'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-LOC': 3,
         'I-LOC': 4, 'B-ORG': 5, 'I-ORG': 6, 'B-ANIM': 7,
@@ -85,7 +85,7 @@ class TnerWikiNeural(DataForNER):
 
 
 @dataclass
-class Runne(DataForNER):
+class RuNNE(DataForNER):
     LABEL2ID = {
         'O': 0, 'B-AGE': 1, 'I-AGE': 2, 'B-AWARD': 3, 'I-AWARD': 4,
         'B-CITY': 5, 'I-CITY': 6, 'B-COUNTRY': 7, 'I-COUNTRY': 8, 'B-CRIME': 9,
@@ -104,6 +104,6 @@ class Runne(DataForNER):
 
 # Выбор класса данных
 DATA_TO_CLASS: Dict[str, Type[DataForNER]] = {
-    'runne': Runne,
-    'wikineural': TnerWikiNeural
+    'runne': RuNNE,
+    'wikineural': TNERWikineural
 }

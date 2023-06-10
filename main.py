@@ -8,7 +8,7 @@ from datasets import load_dataset, DatasetDict
 from transformers import DataCollatorForTokenClassification, Trainer
 
 from bert_model_ner import MODEL_TO_HUB_NAME, BERTModelNER, SEED
-from data import Runne, TnerWikiNeural, DATA_NER, DATA_TO_CLASS
+from data import RuNNE, TNERWikineural, DATA_NER, DATA_TO_CLASS
 
 # Отключение уведомлений от transformers
 os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
@@ -30,7 +30,7 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     if data_name == 'runne':
         datadict = load_dataset(DATA_NER[data_name])
         datadict = DatasetDict({'train': datadict['train'], 'valid': datadict['dev'], 'test': datadict['test']})
-        label2id = Runne.LABEL2ID
+        label2id = RuNNE.LABEL2ID
     else:
         datadict = load_dataset(DATA_NER[data_name][0], DATA_NER[data_name][1])
         datadict = DatasetDict({
@@ -39,7 +39,7 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
             'test': datadict['test']
         })
         datadict = reduce_datadict_size(datadict)
-        label2id = TnerWikiNeural.LABEL2ID
+        label2id = TNERWikineural.LABEL2ID
 
     id2label = {v: k for k, v in label2id.items()}
     config = DATA_TO_CLASS[data_name](datadict)
