@@ -26,6 +26,8 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     learning_rate, dropout, weight_decay):
     logging_dir = Path(result_dir).joinpath('logging')
     print('Директория логгирования:', logging_dir)
+    print('Войдите в Hugging Face. Введите свой токен ниже:')
+    notebook_login()
 
     # Выгрузка данных и словарей маппинга для меток и айдишников
     if data_name == 'runne':
@@ -109,8 +111,6 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
             os.makedirs(model_dir)
 
         trainer.save_model(model_dir)
-        print('Войдите в Hugging Face. Введите свой токен ниже:')
-        notebook_login()
 
         model = BertForTokenClassification.from_pretrained(model_dir)
         model.push_to_hub(f'graviada/{model_name}-ner-{data_name}-ru')
