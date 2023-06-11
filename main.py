@@ -103,9 +103,8 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     print('Завершение работы')
 
     answer = input('Добавить модель на Hugging Face? y/n: ')
-    
     if answer == 'y':
-        model_dir = result_dir + '/model'
+        model_dir = Path(result_dir).joinpath('model')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
