@@ -102,9 +102,7 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     wandb.finish()
     print('Завершение работы')
 
-    answer = ''
-    while answer != 'y' or answer != 'n':
-        answer = input('Добавить модель на Hugging Face? y/n: ')
+    answer = input('Добавить модель на Hugging Face? y/n: ')
     
     if answer == 'y':
         model_dir = result_dir + '/model'
