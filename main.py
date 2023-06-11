@@ -109,6 +109,7 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
             os.makedirs(model_dir)
 
         trainer.save_model(model_dir)
+        print('Войдите в Hugging Face. Введите свой токен ниже:')
         notebook_login()
 
         model = BertForTokenClassification.from_pretrained(model_dir)
