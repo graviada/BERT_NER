@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 import torch
 import wandb
-from huggingface_hub import notebook_login
+from huggingface_hub import login
 from datasets import load_dataset, DatasetDict
 from transformers import DataCollatorForTokenClassification, Trainer, BertForTokenClassification
 
@@ -26,8 +26,8 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     learning_rate, dropout, weight_decay):
     logging_dir = Path(result_dir).joinpath('logging')
     print('Директория логгирования:', logging_dir)
-    print('Войдите в Hugging Face. Введите свой токен ниже:')
-    notebook_login()
+    login_token = input('Войдите в Hugging Face. Введите свой токен:')
+    login(login_token)
 
     # Выгрузка данных и словарей маппинга для меток и айдишников
     if data_name == 'runne':
