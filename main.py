@@ -26,8 +26,6 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
     learning_rate, dropout, weight_decay):
     logging_dir = Path(result_dir).joinpath('logging')
     print('Директория логгирования:', logging_dir)
-    login_token = input('Войдите в Hugging Face. Введите свой токен:')
-    login(login_token)
 
     # Выгрузка данных и словарей маппинга для меток и айдишников
     if data_name == 'runne':
@@ -111,10 +109,12 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
             os.makedirs(model_dir)
 
         trainer.save_model(model_dir)
+        login_token = input('Войдите в Hugging Face. Введите свой токен:')
+        login(login_token)
 
         model = BertForTokenClassification.from_pretrained(model_dir)
         model.push_to_hub(f'graviada/{model_name}-ner-{data_name}-ru')
-        print('Модель успешно добавлена')
+        print(f'Модель graviada/{model_name}-ner-{data_name}-ru успешно добавлена')
 
 
 # Для задания параметров обучения из командной строки
