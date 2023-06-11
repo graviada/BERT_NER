@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html lang="ru">
+
+<head>
+    <title> NER </title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{{url_for('static', path='css/bootstrap.min.css')}}" rel=" stylesheet">
+    <link href="{{url_for('static', path='css/app.css')}}" rel=" stylesheet">
+    <script src="{{url_for('static', path='js/jquery-3.4.1.min.js')}}"></script>
+    <script src="{{url_for('static', path='js/bootstrap.min.js')}}" />
+    </script>
+    <script src="{{url_for('static', path='js/app.js')}}" />
+    </script>
+</head>
+
+
+<body>
+    <div class="overlay">
+        <div class="spinner-border text-primary" role="status"><span class="sr-only">Загрузка...</span></div>
+    </div>
+    <p></p>
+    <p></p>
+    <div class="row">
+        <div class="col-sm-1"></div>
+
+        <div class="col-sm-10">
+            <center>
+                <h5> Название модели: {{ model_name }} </h5>
+                <h5> Классы именованных сущностей из корпуса: {{ data_name }} </h5>
+            </center>
+            <br>
+            <h5> Напишите текст ниже </h5>
+            <div class="form-row">
+                <div class="form-group col-md-12">
+                    <textarea class="form-control input-text" id="input_text"></textarea>
+                </div>
+            </div>
+
+            <div class="form-row ">
+                <div class="form-group col-md-3">
+                    <br>
+                    <button class="btn btn-success btn-lg btn-block" id="btn_generate">Запустить</button>
+                </div>
+            </div>
+            <hr>
+            <div class="form-row">
+                <div class="col-sm-12">
+                    <h5 class="text-center">Результат</h5>
+                    <div class="result-container" id="result"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-1"></div>
+    </div>
+</body>
+
+</html>

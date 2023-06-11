@@ -1,9 +1,9 @@
-from typing import Dict
+from typing import Dict, List
 
 import evaluate
 from transformers.trainer_utils import set_seed
 from transformers import XLMRobertaTokenizerFast, BertTokenizerFast, BertForTokenClassification, \
-    TrainingArguments
+    TrainingArguments, pipeline
 
 # Модели, которые мы проверяем
 MODEL_TO_HUB_NAME = {
@@ -73,3 +73,33 @@ class BERTModelNER:
             load_best_model_at_end=True
         )
         return training_args
+    
+
+class BERTModelNER_Inference(BERTModelNER):
+    def __init__(self, model_name: str):
+        self.model_name = model_name
+
+    @staticmethod
+    def classifier_inizialization(model_name: str):
+        classifier = pipeline('ner', model=model_name, aggregation_strategy='average')
+        return classifier
+    
+    @staticmethod
+    def get_inference_list(ner_result: Dict) -> List:
+        entities = []
+        prev_entity = None
+        prev_end = 0
+        for i in range(len(ner_result)):
+            if (ner_result[i]['entity_group'] == prev_entity) & (ner_result[i]['start'] == prev_end):
+                entities[i-1][2] = ner_result[i]['end']
+                prev_entity = ner_result[i]['entity_group']
+                prev_end = ner_result[i]['end']
+            else:
+                entities.append([
+                    ner_result[i]['entity_group'], 
+                    ner_result[i]['start'],
+                    ner_result[i]['end']
+                ])
+                prev_entity = ner_result[i]['entity_group']
+                prev_end = ner_result[i]['end']
+        return entities

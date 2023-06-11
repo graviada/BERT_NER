@@ -4,8 +4,9 @@ from argparse import ArgumentParser
 
 import torch
 import wandb
+from huggingface_hub import notebook_login
 from datasets import load_dataset, DatasetDict
-from transformers import DataCollatorForTokenClassification, Trainer
+from transformers import DataCollatorForTokenClassification, Trainer, BertForTokenClassification
 
 from bert_model_ner import MODEL_TO_HUB_NAME, BERTModelNER, SEED
 from data import RuNNE, TNERWikineural, DATA_NER, DATA_TO_CLASS
@@ -99,8 +100,23 @@ def main(data_name, model_name, result_dir, num_epochs, max_length, batch_size,
 
     run.summary.update(test_predictions.metrics)
     wandb.finish()
-    
     print('Завершение работы')
+
+    answer = ''
+    while answer != 'y' or answer != 'n':
+        answer = input('Добавить модель на Hugging Face? y/n: ')
+    
+    if answer == 'y':
+        model_dir = result_dir + '/model'
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        trainer.save_model(model_dir)
+        notebook_login()
+
+        model = BertForTokenClassification.from_pretrained(model_dir)
+        model.push_to_hub(f'graviada/{model_name}-ner-{data_name}-ru')
+        print('Модель успешно добавлена')
 
 
 # Для задания параметров обучения из командной строки

@@ -60,7 +60,7 @@ class DataForNER(ABC):
             for prediction, label in zip(predictions, labels)
         ]
 
-        results = BERTModelNER.METRIC.compute(predictions=true_predictions, references=true_labels, average='macro')
+        results = BERTModelNER.METRIC.compute(predictions=true_predictions, references=true_labels)
         return {
             "precision": results["overall_precision"],
             "recall": results["overall_recall"],
